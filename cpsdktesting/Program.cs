@@ -12,8 +12,8 @@ namespace cpsdktesting
     {
         public static async Task Main(string[] args)
         {
-
-            await AccountsCreateOrUpdate();
+            //await AccountsCreateOrUpdate();
+            await AccountUpdate();
             //await AccountDelete();
         }
 
@@ -59,6 +59,38 @@ namespace cpsdktesting
             PlaywrightTestingAccountData resourceData = result.Data;
             // for demo we just print out the id
             Console.WriteLine($"Succeeded on id: {resourceData.Id}");
+        }
+        public static async Task AccountUpdate()
+        {
+            try
+            {
+                TokenCredential cred = new DefaultAzureCredential();
+                ArmClient client = new(cred);
+                string subscriptionId = "9fd9eff4-f386-452e-9893-06417ff6e808";
+                string resourceGroupName = "bugtest-rg";
+                ResourceIdentifier resourceGroupResourceId = ResourceGroupResource.CreateResourceIdentifier(subscriptionId, resourceGroupName);
+                ResourceGroupResource resourceGroupResource = client.GetResourceGroupResource(resourceGroupResourceId);
+                PlaywrightTestingAccountCollection collection = resourceGroupResource.GetPlaywrightTestingAccounts();
+                string accountName = "saradadotnetTestAccount2";
+                PlaywrightTestingAccountResource accountResource = collection.Get(accountName);
+                PlaywrightTestingAccountPatch data = new PlaywrightTestingAccountPatch
+                {
+                    Properties = new AccountUpdateProperties
+                    {
+                        RegionalAffinity = PlaywrightTestingEnablementStatus.Disabled,
+                    },
+                    Tags =
+                    {
+                        ["Team"] = "Playwright Testing Service"
+                    },
+                };
+                var lro = await accountResource.UpdateAsync(data);
+                Console.WriteLine(lro);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
         public static async Task AccountDelete()
         {
